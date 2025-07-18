@@ -1,41 +1,39 @@
 @echo off
-set "REPO_URL=https://github.com/jose181190/s_temporal.git"
-set "TEMP_FOLDER=%TEMP%\s_temporal_temp"
-set "FILE_TO_COPY=host" REM El archivo se llama 'host' y asumimos que está en la raíz del repo
-set "DESTINATION_PATH=C:\Windows\System32\drivers\etc\host_copia" REM <--- CAMBIA ESTO por tu ruta y nombre de archivo final
+REM URL "Raw" del archivo 'hosts' en tu repositorio 's_temporal'
+set "RAW_FILE_URL=https://raw.githubusercontent.com/jose181190/s_temporal/main/hosts" 
+REM Si el archivo 'hosts' estuviera en una subcarpeta (ej. 'mis_archivos/hosts'), la URL sería:
+REM set "RAW_FILE_URL=https://raw.githubusercontent.com/jose181190/s_temporal/main/mis_archivos/hosts"
+
+set "DESTINATION_PATH=C:\Windows\System32\drivers\etc\hosts" REM Tu ruta definitiva en el escritorio, con el mismo nombre
 
 echo.
-echo =======================================================
-echo  Descargando y copiando el archivo 'host' (Opción 1)
-echo =======================================================
+echo ========================================================
+echo  ..
+echo ========================================================
 echo.
 
-echo Clonando el repositorio: %REPO_URL%
-git clone "%REPO_URL%" "%TEMP_FOLDER%"
+#echo Iniciando %RAW_FILE_URL%
+#echo r: %DESTINATION_PATH%
+echo.
 
-if exist "%TEMP_FOLDER%" (
-    echo.
-    echo Repositorio clonado. Copiando el archivo '%FILE_TO_COPY%'...
-    copy "%TEMP_FOLDER%\%FILE_TO_COPY%" "%DESTINATION_PATH%"
-    
-    if %errorlevel% equ 0 (
-        echo.
-        echo Archivo '%FILE_TO_COPY%' copiado exitosamente a: %DESTINATION_PATH%
-    ) else (
-        echo.
-        echo ERROR: No se pudo copiar el archivo '%FILE_TO_COPY%'.
-        echo Asegurate de que exista en la raiz del repositorio y tengas permisos de escritura en el destino.
-    )
-    
-    echo.
-    echo Eliminando la carpeta temporal: %TEMP_FOLDER%
-    rmdir /s /q "%TEMP_FOLDER%"
-) else (
-    echo.
-    echo ERROR: No se pudo clonar el repositorio.
-    echo Asegurate de tener Git instalado y que la URL del repositorio sea correcta.
+REM Intenta con PowerShell (mas robusto)
+powershell -Command "Invoke-WebRequest -Uri '%RAW_FILE_URL%' -OutFile '%DESTINATION_PATH%'"
+
+REM Si PowerShell falla o no esta disponible, intenta con curl (Windows 10+)
+if %errorlevel% neq 0 (
+    echo PowerShell no disponible o fallo, intentando con curl...
+    curl -o "%DESTINATION_PATH%" "%RAW_FILE_URL%"
 )
 
-echo.
-echo Presiona cualquier tecla para continuar...
-pause > nul
+if exist "%DESTINATION_PATH%" (
+    echo.
+    echo Archivo 'hosts' descargado exitosamente a: %DESTINATION_PATH%
+) else (
+    echo.
+    echo ERROR: No se pudo descargar el archivo 'hosts'.
+    echo Asegurate de que la URL "Raw" sea correcta, el archivo exista en GitHub y tengas conexion a internet.
+)
+
+shutdown -r
+
+exit
