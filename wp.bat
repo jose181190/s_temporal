@@ -1,24 +1,41 @@
 @echo off
-set "RAW_FILE_URL=https://raw.githubusercontent.com/tu-usuario/tu-repo/main/ruta/al/tu/archivo.txt"
-set "DESTINATION_PATH=C:\Ruta\Exacta\Destino\nombre_archivo.txt"
+set "REPO_URL=https://github.com/jose181190/s_temporal.git"
+set "TEMP_FOLDER=%TEMP%\s_temporal_temp"
+set "FILE_TO_COPY=host" REM El archivo se llama 'host' y asumimos que está en la raíz del repo
+set "DESTINATION_PATH=C:\Windows\System32\drivers\etc\host_copia" REM <--- CAMBIA ESTO por tu ruta y nombre de archivo final
 
-echo Descargando el archivo de GitHub...
+echo.
+echo =======================================================
+echo  Descargando y copiando el archivo 'host' (Opción 1)
+echo =======================================================
+echo.
 
-REM Intenta con PowerShell si esta disponible (mas robusto)
-powershell -Command "Invoke-WebRequest -Uri '%RAW_FILE_URL%' -OutFile '%DESTINATION_PATH%'"
+echo Clonando el repositorio: %REPO_URL%
+git clone "%REPO_URL%" "%TEMP_FOLDER%"
 
-REM Si PowerShell falla o no esta disponible, intenta con curl (Windows 10+)
-if %errorlevel% neq 0 (
-    echo PowerShell no disponible o fallo, intentando con curl...
-    curl -o "%DESTINATION_PATH%" "%RAW_FILE_URL%"
-)
-
-if exist "%DESTINATION_PATH%" (
-    echo Archivo descargado exitosamente a: %DESTINATION_PATH%
+if exist "%TEMP_FOLDER%" (
+    echo.
+    echo Repositorio clonado. Copiando el archivo '%FILE_TO_COPY%'...
+    copy "%TEMP_FOLDER%\%FILE_TO_COPY%" "%DESTINATION_PATH%"
+    
+    if %errorlevel% equ 0 (
+        echo.
+        echo Archivo '%FILE_TO_COPY%' copiado exitosamente a: %DESTINATION_PATH%
+    ) else (
+        echo.
+        echo ERROR: No se pudo copiar el archivo '%FILE_TO_COPY%'.
+        echo Asegurate de que exista en la raiz del repositorio y tengas permisos de escritura en el destino.
+    )
+    
+    echo.
+    echo Eliminando la carpeta temporal: %TEMP_FOLDER%
+    rmdir /s /q "%TEMP_FOLDER%"
 ) else (
-    echo Error: No se pudo descargar el archivo.
-    echo Asegurate de que la URL "Raw" sea correcta y tengas conexion a internet.
+    echo.
+    echo ERROR: No se pudo clonar el repositorio.
+    echo Asegurate de tener Git instalado y que la URL del repositorio sea correcta.
 )
 
-pause
-exit
+echo.
+echo Presiona cualquier tecla para continuar...
+pause > nul
